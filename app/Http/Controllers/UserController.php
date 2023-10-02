@@ -2,29 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\registerRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+
+
 
 class UserController extends Controller
 {
     //
     
-    public function UserRegistration(Request $request)
+    public function UserRegistration(registerRequest $request)
     {
-
-
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:6',
-            'status' => 'required|in:approved,pending'
-        ];
-        $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
+        // $rules = [
+        //     'name' => 'required|string|max:255',
+        //     'email' => 'required|email|unique:users',
+        //     'password' => 'required|string|min:6',
+        //     'status' => 'required|in:approved,pending'
+        // ];
+        // $validator = Validator::make($request->all(), $rules);
+        // if ($validator->fails()) {
+        //     return response()->json(['error' => $validator->errors()], 400);
+        // }
         $user = User::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
@@ -34,17 +36,33 @@ class UserController extends Controller
         ]);
         return response()->json(["user" => $user, 'message' => 'User registered'], 201);
     }
+    // Original
+    // public function UserLogin(Request $request)
+    // {
+
+    //     $credentials = $request->only('email', 'password');
+    //     if (!auth()->attempt($credentials)) {
+    //         return response()->json(['error' => 'Invalid Email or Password'], 401);
+    //     }
+    //     $user = auth()->user();
+    //     $token = auth()->$user->createToken('Token', expiresAt:now()->addDay())->plainTextToken;
+        
+    //     return response()->json(['user' => $user, 'access_token' => $token]);
+    // }
     public function UserLogin(Request $request)
     {
 
         $credentials = $request->only('email', 'password');
         if (!auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Invalid Email or Password'], 401);
+            return response()->json(['error' => 'Invalid credentials'], 401);
         }
         $user = auth()->user();
-        $token = auth()->$user->createToken('Token', expiresAt:now()->addDay())->plainTextToken;
+        $token = $user->createToken('Token')->plainTextToken;  // token
+       
         return response()->json(['user' => $user, 'access_token' => $token]);
     }
+    
+
     public function verifyUser($id)
     {
         $user = User::find($id);
